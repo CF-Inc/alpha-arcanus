@@ -89,6 +89,11 @@ type Deck @withSubscription {
   cards: [Card!]
 }
 
+type CardCollection {
+  id: String! @id
+  cards: [Card!]!
+}
+
 type Lobby @withSubscription {
   id: String! @id
   status: LobbyStatus!
@@ -101,7 +106,7 @@ type Lobby @withSubscription {
   losers: [User!]
   observers: [User!]
 
-  handState: [[Card!]!]
-  deckState: [[Card!]!]
+  handState: [CardCollection!]
+  deckState: [CardCollection!]
   # TODO: Board State
 }
