@@ -1,10 +1,12 @@
 {
-  
-  
   "version": 2,
-  
-  "projects": {},
-  "cli": {
-    "defaultCollection": "@nrwl/workspace"
-  }
+  "projects": {
+    "database": {
+      "root": "apps/database",
+      "sourceRoot": "apps/database/src",
+      "projectType": "application",
+      "targets": {}
+    }
+  },
+  "cli": { "defaultCollection": "@nrwl/workspace" }
 }

@@ -1,0 +1,107 @@
+enum Role {
+  ADMIN
+  CREATOR
+  MODERATOR
+}
+
+enum LobbyStatus {
+  OPEN
+  STARTED
+  COMPLETE
+}
+
+enum CardRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  LEGENDARY
+}
+
+type User @secret(field: "discordId") @withSubscription {
+  id: ID!
+  displayName: String! @id
+  joinedOn: DateTime! @search
+  avatar: String!
+  role: [Role!]!
+
+  cards: [Card!] @hasInverse(field: owner)
+  decks: [Deck!] @hasInverse(field: owner)
+
+  lobby: Lobby @hasInverse(field: players)
+  wins: [Game!] @hasInverse(field: winners)
+  loses: [Game!] @hasInverse(field: losers)
+
+  creations: [CardTemplate!] @hasInverse(field: createdBy)
+  editions: [CardTemplate!] @hasInverse(field: editedBy)
+}
+
+type CardTemplate @withSubscription {
+  id: String! @id
+  uses: [Card!]
+
+  addedOn: DateTime! @search
+  editedOn: DateTime @search
+
+  createdBy: User!
+  editedBy: [User!]
+
+  name: String! @search(by: [term])
+  rarity: CardRarity!
+  artwork: String!
+  description: String! @search(by: [fulltext])
+  # TODO: Card Attributes
+}
+
+type AttributeModifier {
+  id: String! @id
+  operation: String!
+  value: Int!
+}
+
+type CardModifier {
+  id: String! @id
+  for: Card!
+  mutatedOn: DateTime!
+
+  nameModifier: String! @search(by: [term])
+  rarityModifier: Int!
+  artworkModifier: String!
+  descriptionModifier: String! @search(by: [term])
+  # TODO: Mutation Attributes
+}
+
+type Card @withSubscription {
+  id: String! @id
+  owner: User!
+  pastOwners: [User!]
+  obtainedOn: DateTime! @search
+  deck: Deck @hasInverse(field: cards)
+
+  template: CardTemplate! @hasInverse(field: uses)
+  modifiers: [CardModifier!] @hasInverse(field: for)
+}
+
+type Deck @withSubscription {
+  id: String! @id
+  owner: User!
+  createdOn: DateTime! @search
+  name: String! @search(by: [term, regexp])
+  cards: [Card!]
+}
+
+type Lobby @withSubscription {
+  id: String! @id
+  status: LobbyStatus!
+  manager: User
+
+  players: [User!]!
+  decks: [Deck!]!
+
+  winners: [User!]
+  losers: [User!]
+  observers: [User!]
+
+  handState: [[Card!]!]
+  deckState: [[Card!]!]
+  # TODO: Board State
+}
