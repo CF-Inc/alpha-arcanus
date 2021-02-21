@@ -1,13 +1,7 @@
-enum Role {
+enum UserRole {
   ADMIN
   CREATOR
   MODERATOR
-}
-
-enum LobbyStatus {
-  OPEN
-  STARTED
-  COMPLETE
 }
 
 enum CardRarity {
@@ -17,22 +11,35 @@ enum CardRarity {
   LEGENDARY
 }
 
-type User @secret(field: "discordId") @withSubscription {
-  id: ID!
-  displayName: String! @id
+enum MoveType {
+  ACTIVATE
+  SUMMON
+}
+
+enum GameStatus {
+  PLANNING
+  ON_GOING
+  COMPLETE
+  CLOSED
+}
+
+type User @withSubscription {
+  id: String! @id
+  displayName: String! @search(by: [term])
   joinedOn: DateTime! @search
   avatar: String!
-  role: [Role!]!
+  role: [UserRole!]!
 
   cards: [Card!] @hasInverse(field: owner)
   decks: [Deck!] @hasInverse(field: owner)
+  actions: [GameAction!] @hasInverse(field: from)
 
-  lobby: Lobby @hasInverse(field: players)
+  activeGame: Game @hasInverse(field: players)
   wins: [Game!] @hasInverse(field: winners)
   loses: [Game!] @hasInverse(field: losers)
 
-  creations: [CardTemplate!] @hasInverse(field: createdBy)
-  editions: [CardTemplate!] @hasInverse(field: editedBy)
+  templateCreations: [CardTemplate!] @hasInverse(field: createdBy)
+  templateEditions: [CardTemplate!] @hasInverse(field: editedBy)
 }
 
 type CardTemplate @withSubscription {
@@ -46,7 +53,7 @@ type CardTemplate @withSubscription {
   editedBy: [User!]
 
   name: String! @search(by: [term])
-  rarity: CardRarity!
+  rarity: CardRarity! @search
   artwork: String!
   description: String! @search(by: [fulltext])
   # TODO: Card Attributes
@@ -54,17 +61,17 @@ type CardTemplate @withSubscription {
 
 type AttributeModifier {
   id: String! @id
-  operation: String!
-  value: Int!
+  operation: String! @search
+  value: Int! @search
 }
 
 type CardModifier {
   id: String! @id
   for: Card!
-  mutatedOn: DateTime!
+  mutatedOn: DateTime! @search
 
   nameModifier: String! @search(by: [term])
-  rarityModifier: Int!
+  rarityModifier: Int! @search
   artworkModifier: String!
   descriptionModifier: String! @search(by: [term])
   # TODO: Mutation Attributes
@@ -79,6 +86,9 @@ type Card @withSubscription {
 
   template: CardTemplate! @hasInverse(field: uses)
   modifiers: [CardModifier!] @hasInverse(field: for)
+
+  moves: [GameMove!] @hasInverse(field: card)
+  targets: [GameMove!] @hasInverse(field: targets)
 }
 
 type Deck @withSubscription {
@@ -89,24 +99,81 @@ type Deck @withSubscription {
   cards: [Card!]
 }
 
-type CardCollection {
+interface GameAction @withSubscription {
   id: String! @id
-  cards: [Card!]!
+  from: User!
+  for: Game! @hasInverse(field: actions)
+  ocurredOn: DateTime! @search
 }
 
-type Lobby @withSubscription {
+type GameView implements GameAction @withSubscription {
+  for: Game! @hasInverse(field: views)
+  stoppedOn: DateTime! @search
+}
+
+type DrawPayload {
+  for: GameDraw! @hasInverse(field: payload)
+  card: Card!
+}
+
+type GameDraw implements GameAction @withSubscription {
+  player: User!
+  payload: DrawPayload!
+}
+
+type GameMove implements GameAction @withSubscription {
+  card: Card!
+  type: MoveType! @search
+  targets: [Card!]
+}
+
+type GameMessage implements GameAction @withSubscription {
+  body: String! @search(by: [fulltext])
+}
+
+"""
+PlayerState that is only known to the server
+"""
+type SecretPlayerState {
+  for: PlayerState!  @hasInverse(field: secret)
+  library: [Card!]!
+}
+
+"""
+PlayerState that is known only to a given player
+"""
+type PrivatePlayerState {
+  for: PlayerState!  @hasInverse(field: private)
+  deck: Deck!
+  hand: [Card!]!
+}
+
+type PlayerState @withSubscription {
+  of: User!
+  for: Game! @hasInverse(field: playerStates)
+  private: PrivatePlayerState! @hasInverse(field: for)
+  secret: SecretPlayerState! @hasInverse(field: for)
+
+  discard: [Card!]!
+  # TODO: Board State
+}
+
+type Game @secret(field: "password") @withSubscription {
   id: String! @id
-  status: LobbyStatus!
-  manager: User
+  name: String! @search
+  public: Boolean! @search
+  status: GameStatus! @search
+
+  startedOn: DateTime @search
+  completedOn: DateTime @search
 
   players: [User!]!
-  decks: [Deck!]!
+  playerStates: [PlayerState!]
 
+  observers: [User!]
   winners: [User!]
   losers: [User!]
-  observers: [User!]
 
-  handState: [CardCollection!]
-  deckState: [CardCollection!]
-  # TODO: Board State
+  views: [GameView!]
+  actions: [GameAction!]
 }
