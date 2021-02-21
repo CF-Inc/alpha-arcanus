@@ -38,25 +38,27 @@ type User @withSubscription {
   wins: [Game!] @hasInverse(field: winners)
   loses: [Game!] @hasInverse(field: losers)
 
-  templateCreations: [CardTemplate!] @hasInverse(field: createdBy)
   templateEditions: [CardTemplate!] @hasInverse(field: editedBy)
 }
 
-type CardTemplate @withSubscription {
+type CardTemplateEdit {
   id: String! @id
-  uses: [Card!]
+  for: CardTemplate! @hasInverse(field: edits)
 
-  addedOn: DateTime! @search
   editedOn: DateTime @search
-
-  createdBy: User!
-  editedBy: [User!]
+  editedBy: User!
 
   name: String! @search(by: [term])
   rarity: CardRarity! @search
   artwork: String!
   description: String! @search(by: [fulltext])
   # TODO: Card Attributes
+}
+
+type CardTemplate @withSubscription {
+  id: String! @id
+  uses: [Card!]
+  edits: [CardTemplateEdit!]!
 }
 
 type AttributeModifier {
