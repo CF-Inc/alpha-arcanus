@@ -39,11 +39,12 @@ type User @withSubscription {
   loses: [Game!] @hasInverse(field: losers)
 
   templateEditions: [CardTemplate!] @hasInverse(field: editedBy)
+  deleted: Boolean! @search
 }
 
-type CardTemplateEdit {
+type CardTemplateVersion {
   id: String! @id
-  for: CardTemplate! @hasInverse(field: edits)
+  for: CardTemplate! @hasInverse(field: versions)
 
   editedOn: DateTime @search
   editedBy: User!
@@ -58,7 +59,8 @@ type CardTemplateEdit {
 type CardTemplate @withSubscription {
   id: String! @id
   uses: [Card!]
-  edits: [CardTemplateEdit!]!
+  versions: [CardTemplateVersion!]!
+  deleted: Boolean! @search
 }
 
 type AttributeModifier {
@@ -91,14 +93,23 @@ type Card @withSubscription {
 
   moves: [GameMove!] @hasInverse(field: card)
   targets: [GameMove!] @hasInverse(field: targets)
+  deleted: Boolean! @search
+}
+
+type DeckVersion {
+  id: String! @id
+  for: CardTemplate! @hasInverse(field: versions)
+  editedOn: DateTime! @search
+  name: String! @search(by: [term, regexp])
+  description: String @search(by: [fulltext, regexp])
+  cards: [Card!]
 }
 
 type Deck @withSubscription {
   id: String! @id
   owner: User!
-  createdOn: DateTime! @search
-  name: String! @search(by: [term, regexp])
-  cards: [Card!]
+  versions: [DeckVersion!]!
+  deleted: Boolean! @search
 }
 
 interface GameAction @withSubscription {
@@ -138,7 +149,7 @@ PlayerState that is only known to the server
 """
 type SecretPlayerState {
   for: PlayerState!  @hasInverse(field: secret)
-  library: [Card!]!
+  library: [Card!]
 }
 
 """
@@ -146,8 +157,8 @@ PlayerState that is known only to a given player
 """
 type PrivatePlayerState {
   for: PlayerState!  @hasInverse(field: private)
-  deck: Deck!
-  hand: [Card!]!
+  deck: DeckVersion!
+  hand: [Card!]
 }
 
 type PlayerState @withSubscription {
@@ -156,7 +167,7 @@ type PlayerState @withSubscription {
   private: PrivatePlayerState! @hasInverse(field: for)
   secret: SecretPlayerState! @hasInverse(field: for)
 
-  discard: [Card!]!
+  discard: [Card!]
   # TODO: Board State
 }
 
