@@ -1,0 +1,22 @@
+version: '3.2'
+services:
+  zero:
+    image: dgraph/dgraph:latest
+    volumes:
+      - /tmp/data:/dgraph
+    restart: on-failure
+    command: dgraph zero --my=zero:5080
+
+  alpha:
+    build:
+      context: .
+      dockerfile: apps/database/Dockerfile
+    volumes:
+      - /tmp/data:/dgraph
+    ports:
+      - 3000:8080
+    restart: on-failure
+    environment:
+      ALPHA: alpha:7080
+      ZERO: zero:5080
+      WHITELIST: 0.0.0.0/0

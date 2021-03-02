@@ -1,0 +1,192 @@
+enum UserRole {
+  ADMIN
+  CREATOR
+  MODERATOR
+}
+
+enum CardRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  LEGENDARY
+}
+
+enum MoveType {
+  ACTIVATE
+  SUMMON
+}
+
+enum GameStatus {
+  PLANNING
+  ON_GOING
+  COMPLETE
+  CLOSED
+}
+
+type User @withSubscription {
+  id: String! @id
+  displayName: String! @search(by: [term])
+  joinedOn: DateTime! @search
+  avatar: String!
+  role: [UserRole!]!
+
+  cards: [Card!] @hasInverse(field: owner)
+  decks: [Deck!] @hasInverse(field: owner)
+  actions: [GameAction!] @hasInverse(field: from)
+
+  activeGame: Game @hasInverse(field: players)
+  wins: [Game!] @hasInverse(field: winners)
+  loses: [Game!] @hasInverse(field: losers)
+
+  templateEditions: [CardTemplate!] @hasInverse(field: editedBy)
+  deleted: Boolean! @search
+}
+
+type CardTemplateVersion {
+  id: String! @id
+  for: CardTemplate! @hasInverse(field: versions)
+
+  editedOn: DateTime @search
+  editedBy: User!
+
+  name: String! @search(by: [term])
+  rarity: CardRarity! @search
+  artwork: String!
+  description: String! @search(by: [fulltext])
+  # TODO: Card Attributes
+}
+
+type CardTemplate @withSubscription {
+  id: String! @id
+  uses: [Card!]
+  versions: [CardTemplateVersion!]!
+  deleted: Boolean! @search
+}
+
+type AttributeModifier {
+  id: String! @id
+  operation: String! @search
+  value: Int! @search
+}
+
+type CardModifier {
+  id: String! @id
+  for: Card!
+  mutatedOn: DateTime! @search
+
+  nameModifier: String! @search(by: [term])
+  rarityModifier: Int! @search
+  artworkModifier: String!
+  descriptionModifier: String! @search(by: [term])
+  # TODO: Mutation Attributes
+}
+
+type Card @withSubscription {
+  id: String! @id
+  owner: User!
+  pastOwners: [User!]
+  obtainedOn: DateTime! @search
+  deck: Deck @hasInverse(field: cards)
+
+  template: CardTemplate! @hasInverse(field: uses)
+  modifiers: [CardModifier!] @hasInverse(field: for)
+
+  moves: [GameMove!] @hasInverse(field: card)
+  targets: [GameMove!] @hasInverse(field: targets)
+  deleted: Boolean! @search
+}
+
+type DeckVersion {
+  id: String! @id
+  for: CardTemplate! @hasInverse(field: versions)
+  editedOn: DateTime! @search
+  name: String! @search(by: [term, regexp])
+  description: String @search(by: [fulltext, regexp])
+  cards: [Card!]
+}
+
+type Deck @withSubscription {
+  id: String! @id
+  owner: User!
+  versions: [DeckVersion!]!
+  deleted: Boolean! @search
+}
+
+interface GameAction @withSubscription {
+  id: String! @id
+  from: User!
+  for: Game! @hasInverse(field: actions)
+  ocurredOn: DateTime! @search
+}
+
+type GameView implements GameAction @withSubscription {
+  for: Game! @hasInverse(field: views)
+  stoppedOn: DateTime! @search
+}
+
+type DrawPayload {
+  for: GameDraw! @hasInverse(field: payload)
+  card: Card!
+}
+
+type GameDraw implements GameAction @withSubscription {
+  player: User!
+  payload: DrawPayload!
+}
+
+type GameMove implements GameAction @withSubscription {
+  card: Card!
+  type: MoveType! @search
+  targets: [Card!]
+}
+
+type GameMessage implements GameAction @withSubscription {
+  body: String! @search(by: [fulltext])
+}
+
+"""
+PlayerState that is only known to the server
+"""
+type SecretPlayerState {
+  for: PlayerState!  @hasInverse(field: secret)
+  library: [Card!]
+}
+
+"""
+PlayerState that is known only to a given player
+"""
+type PrivatePlayerState {
+  for: PlayerState!  @hasInverse(field: private)
+  deck: DeckVersion!
+  hand: [Card!]
+}
+
+type PlayerState @withSubscription {
+  of: User!
+  for: Game! @hasInverse(field: playerStates)
+  private: PrivatePlayerState! @hasInverse(field: for)
+  secret: SecretPlayerState! @hasInverse(field: for)
+
+  discard: [Card!]
+  # TODO: Board State
+}
+
+type Game @secret(field: "password") @withSubscription {
+  id: String! @id
+  name: String! @search
+  public: Boolean! @search
+  status: GameStatus! @search
+
+  startedOn: DateTime @search
+  completedOn: DateTime @search
+
+  players: [User!]!
+  playerStates: [PlayerState!]
+
+  observers: [User!]
+  winners: [User!]
+  losers: [User!]
+
+  views: [GameView!]
+  actions: [GameAction!]
+}
