@@ -7,7 +7,7 @@
       "projectType": "application",
       "targets": {
         "docker": {
-          "builder": "@nx-tools/nx-docker:build",
+          "executor": "@nx-tools/nx-docker:build",
           "options": {
             "repository": "alpha-arcanus/database",
             "dockerfile": "apps/database/Dockerfile",
@@ -16,7 +16,140 @@
           }
         }
       }
+    },
+    "web-client": {
+      "projectType": "application",
+      "root": "apps/web-client",
+      "sourceRoot": "apps/web-client/src",
+      "prefix": "web-client",
+      "targets": {
+        "build": {
+          "executor": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/web-client",
+            "index": "apps/web-client/src/index.html",
+            "main": "apps/web-client/src/main.ts",
+            "polyfills": "apps/web-client/src/polyfills.ts",
+            "tsConfig": "apps/web-client/tsconfig.app.json",
+            "aot": true,
+            "assets": [
+              "apps/web-client/src/favicon.ico",
+              "apps/web-client/src/assets"
+            ],
+            "styles": ["apps/web-client/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/web-client/src/environments/environment.ts",
+                  "with": "apps/web-client/src/environments/environment.production.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "web-client:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "web-client:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "web-client:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "apps/web-client/src/**/*.ts",
+              "apps/web-client/src/**/*.html"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/web-client"],
+          "options": {
+            "jestConfig": "apps/web-client/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "web-client-e2e": {
+      "root": "apps/web-client-e2e",
+      "sourceRoot": "apps/web-client-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/web-client-e2e/cypress.json",
+            "tsConfig": "apps/web-client-e2e/tsconfig.e2e.json",
+            "devServerTarget": "web-client:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "web-client:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["apps/web-client-e2e/**/*.{js,ts}"]
+          }
+        }
+      }
     }
   },
-  "cli": { "defaultCollection": "@nrwl/workspace" }
+  "cli": {
+    "defaultCollection": "@nrwl/angular"
+  },
+  "generators": {
+    "@nrwl/angular:application": {
+      "style": "scss",
+      "linter": "eslint",
+      "unitTestRunner": "jest",
+      "e2eTestRunner": "cypress",
+      "strict": true
+    },
+    "@nrwl/angular:library": {
+      "style": "scss",
+      "linter": "eslint",
+      "unitTestRunner": "jest"
+    },
+    "@nrwl/angular:component": {
+      "style": "scss"
+    }
+  }
 }

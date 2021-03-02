@@ -1,0 +1,62 @@
+{
+  "root": true,
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nrwl/nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+            ]
+          }
+        ],
+        "import/order": [
+          "warn",
+          {
+            "alphabetize": {
+              "caseInsensitive": false,
+              "order": "asc"
+            },
+            "groups": [
+              ["external", "builtin"],
+              "internal",
+              "parent",
+              "sibling"
+            ],
+            "newlines-between": "always",
+            "pathGroups": [
+              {
+                "group": "external",
+                "pattern": "{@angular/**,@nestjs/**,react,react-native,react-*,@vue/**,vue}",
+                "position": "before"
+              },
+              {
+                "group": "external",
+                "pattern": "@alpha-arcanus/**",
+                "position": "after"
+              }
+            ],
+            "pathGroupsExcludedImportTypes": ["react"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["suiyobi/typescript", "suiyobi/node"],
+      "parserOptions": { "project": "./tsconfig.base.json" },
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["suiyobi/javascript", "suiyobi/node"],
+      "rules": {}
+    }
+  ]
+}

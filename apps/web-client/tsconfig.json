@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": ["./src/main.ts"],
+  "include": ["**/*.ts"],
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictTemplates": true
+  }
+}

@@ -2,8 +2,9 @@
   "compileOnSave": false,
   "compilerOptions": {
     "rootDir": ".",
+    "composite": true,
     "sourceMap": true,
-    "declaration": false,
+    "declaration": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -11,6 +12,7 @@
     "target": "es2015",
     "module": "esnext",
     "lib": ["es2017", "dom"],
+    "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",

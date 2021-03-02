@@ -1,0 +1,63 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "rules": {
+    "import/order": [
+      "warn",
+      {
+        "alphabetize": {
+          "caseInsensitive": false,
+          "order": "asc"
+        },
+        "groups": [["external", "builtin"], "internal", "parent", "sibling"],
+        "newlines-between": "always",
+        "pathGroups": [
+          {
+            "group": "external",
+            "pattern": "{@angular/**,@nestjs/**,react,react-native,react-*,@vue/**,vue}",
+            "position": "before"
+          },
+          {
+            "group": "external",
+            "pattern": "@alpha-arcanus/**",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**!(spec|test).ts"],
+      "extends": ["suiyobi/typescript", "suiyobi/angular", "suiyobi/rxjs"],
+      "parserOptions": { "project": "apps/web-client/tsconfig.app.json" },
+      "rules": {
+        "@angular-eslint/directive-selector": [
+          "error",
+          { "type": "attribute", "prefix": "web-client", "style": "camelCase" }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          { "type": "element", "prefix": "web-client", "style": "kebab-case" }
+        ]
+      }
+    },
+    {
+      "files": ["*.html"],
+      "extends": ["suiyobi/angular-template"],
+      "rules": {}
+    },
+    {
+      "extends": ["suiyobi/typescript", "suiyobi/jest"],
+      "files": "*.spec.ts",
+      "parserOptions": { "project": "apps/web-client/tsconfig.spec.json" },
+      "settings": { "jest": { "version": 26 } }
+    },
+    {
+      "files": ["*.js"],
+      "extends": ["suiyobi/javascript", "suiyobi/node"],
+      "rules": {}
+    }
+  ]
+}

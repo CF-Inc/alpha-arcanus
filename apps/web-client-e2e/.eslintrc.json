@@ -1,0 +1,15 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "extends": ["suiyobi/typescript", "suiyobi/cypress"],
+      "parserOptions": { "project": ["apps/web-client-e2e/tsconfig.e2e.json"] }
+    },
+    {
+      "files": ["*.js"],
+      "extends": ["suiyobi/javascript", "suiyobi/cypress"]
+    }
+  ]
+}
