@@ -5,7 +5,17 @@
       "root": "apps/database",
       "sourceRoot": "apps/database/src",
       "projectType": "application",
-      "targets": {}
+      "targets": {
+        "docker": {
+          "builder": "@nx-tools/nx-docker:build",
+          "options": {
+            "repository": "alpha-arcanus/database",
+            "dockerfile": "apps/database/Dockerfile",
+            "socket": "/var/run/docker.sock",
+            "push": false
+          }
+        }
+      }
     }
   },
   "cli": { "defaultCollection": "@nrwl/workspace" }
